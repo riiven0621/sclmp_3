@@ -1,0 +1,1 @@
+const fs=require('fs');let s=fs.readFileSync('index.html','utf8');for(let x of ['pet-room','pet-action','Desk Paws','frame'])console.log(x,s.includes(x)); console.log(s.match(/<div class="pet-scene"[\s\S]*?<\/div><div class="pet-desc">/)?.[0]);
