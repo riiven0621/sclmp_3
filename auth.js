@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app-check.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -19,7 +20,8 @@ import {
   updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
-import { firebaseConfig } from "./firebase-config.js";
+import { firebaseAppCheckSiteKey, firebaseAIModel, firebaseConfig } from "./firebase-config.js";
+import { mountScheduleAssistant } from "./schedule-assistant.js";
 
 const $ = selector => document.querySelector(selector);
 const authView = $("#authView");
@@ -39,6 +41,7 @@ const localDateKey = date => {
 let auth;
 let db;
 let currentUser = null;
+let scheduleAssistant = null;
 let selectedDate = localDateKey(new Date());
 let visibleEntries = [];
 let stopWatchingEntries = null;
@@ -316,17 +319,44 @@ if (!hasWebConfig) {
 } else {
   try {
     const app = initializeApp(firebaseConfig);
+    let appCheckReady = false;
+    if (firebaseAppCheckSiteKey) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaEnterpriseProvider(firebaseAppCheckSiteKey),
+          isTokenAutoRefreshEnabled: true
+        });
+        appCheckReady = true;
+      } catch (error) {
+        console.error("Firebase App Check initialization failed", error);
+      }
+    }
     auth = getAuth(app);
     db = getFirestore(app);
+    scheduleAssistant = mountScheduleAssistant({
+      app,
+      db,
+      modelName: firebaseAIModel,
+      appCheckReady: () => appCheckReady,
+      getCurrentUser: () => currentUser,
+      onScheduleChanged: date => {
+        if (date) selectedDate = date;
+        updateDateHeader();
+        watchSelectedDate();
+      }
+    });
     onAuthStateChanged(auth, user => {
       if (!user) {
+        scheduleAssistant?.setUser(null);
         if (stopWatchingEntries) stopWatchingEntries();
         currentUser = null;
         visibleEntries = [];
         showView("auth");
       } else if (user.isAnonymous) {
+        scheduleAssistant?.setUser(null);
         enterVisitor();
       } else {
+        scheduleAssistant?.setUser(user);
         enterApp(user);
       }
     }, error => {

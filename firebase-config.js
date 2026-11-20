@@ -7,3 +7,7 @@ export const firebaseConfig = {
   messagingSenderId: "694846351579",
   appId: "1:694846351579:web:bb05482618ae08a721c4fe"
 };
+
+// Set this after registering a reCAPTCHA Enterprise provider in Firebase App Check.
+export const firebaseAppCheckSiteKey = "";
+export const firebaseAIModel = "gemini-3.8-flash";

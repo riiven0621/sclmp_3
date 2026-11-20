@@ -15,6 +15,13 @@
     .overlay{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;padding:18px;background:#17271f80}.overlay.open{display:flex}.modal{width:min(500px,100%);max-height:92vh;overflow:auto;padding:25px;background:#fff;border-radius:22px;box-shadow:0 25px 80px #10231944}.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.modal-head h2{margin:0;font-size:19px}.close{width:34px;height:34px;border:0;border-radius:10px;background:#f2f5f2;color:#617067;font-size:18px}.field{margin-bottom:16px}.field label{display:block;margin-bottom:7px;font-size:12px;font-weight:750;color:#516257}.field input,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fbfcfb;color:#23362d;outline:none}.field input:focus,.field textarea:focus{border-color:#86ad91;box-shadow:0 0 0 3px #86ad9125}.field textarea{resize:vertical;min-height:88px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.toast{position:fixed;z-index:9;left:50%;bottom:22px;transform:translate(-50%,12px);max-width:calc(100% - 32px);padding:12px 17px;border-radius:12px;background:#24392e;color:white;font-size:13px;opacity:0;pointer-events:none;transition:.2s;box-shadow:var(--shadow)}.toast.show{opacity:1;transform:translate(-50%,0)}.footer-note{margin-top:28px;color:#97a29b;font-size:11px;line-height:1.6;text-align:center}
     @media(max-width:680px){.shell{padding:19px 15px 34px}.topbar{margin-bottom:27px}.brand{font-size:16px}.brand-mark{width:34px;height:34px}.account-label{display:none}.hero{display:block}.date-tools{margin-top:16px}.date-tools input{flex:1;width:auto}.summary{grid-template-columns:1fr 1fr}.summary-card:first-child{grid-column:1/-1}.entry{grid-template-columns:21px 47px minmax(0,1fr);gap:10px;padding:13px 11px}.entry-actions{grid-column:3;justify-content:flex-end;margin-top:-2px}.entry-title{font-size:13px}.auth-card{padding:34px 23px}.form-row{grid-template-columns:1fr}}
   </style>
+  <style>
+    .assistant-panel{position:fixed;z-index:8;right:24px;bottom:24px;display:flex;flex-direction:column;width:min(430px,calc(100vw - 30px));height:min(660px,calc(100vh - 48px));overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 22px 70px #1d332b30}
+    .assistant-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}.assistant-title{font-weight:800}.assistant-subtitle{margin-top:3px;color:var(--muted);font-size:11px}.assistant-head-actions{display:flex;gap:6px}.assistant-head-actions button{width:34px;height:34px;border:0;border-radius:9px;background:#f2f5f2;color:#617067;font-size:17px}
+    .assistant-messages{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:16px;background:#fbfcfb}.assistant-bubble{max-width:88%;padding:11px 13px;border-radius:15px;font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}.assistant-bubble.assistant{align-self:flex-start;background:#eef3ef;color:#314a3a;border-top-left-radius:5px}.assistant-bubble.user{align-self:flex-end;background:var(--green);color:#fff;border-top-right-radius:5px}.assistant-bubble.pending{color:var(--muted);font-style:italic}
+    .assistant-prompts{display:flex;flex-wrap:wrap;gap:7px;padding:10px 14px 0}.assistant-prompts button{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#fff;color:#476251;font-size:11px}.assistant-composer{display:flex;align-items:flex-end;gap:8px;padding:11px 13px}.assistant-composer textarea{flex:1;resize:none;max-height:120px;min-height:42px;padding:10px 11px;border:1px solid var(--line);border-radius:13px;outline:none}.assistant-composer textarea:focus{border-color:#86ad91}.assistant-send{width:42px;height:42px;border:0;border-radius:12px;background:var(--green);color:#fff;font-size:18px}.assistant-privacy{margin:0;padding:0 15px 12px;color:#8b978f;font-size:10px;line-height:1.5}
+    @media(max-width:680px){.assistant-panel{right:10px;bottom:10px;width:calc(100vw - 20px);height:min(72vh,660px)}}
+  </style>
 </head>
 <body>
   <section id="authView" class="auth-wrap">
@@ -48,7 +55,7 @@
   <main id="appView" class="shell hidden">
     <header class="topbar">
       <div class="brand"><span class="brand-mark">✳</span><span>日常拾光</span></div>
-      <div class="top-actions"><span id="accountLabel" class="account-label"></span><button id="signOut" class="button secondary small" type="button">登出</button></div>
+      <div class="top-actions"><span id="accountLabel" class="account-label"></span><button id="assistantToggle" class="button secondary small" type="button">✦ AI 助理</button><button id="signOut" class="button secondary small" type="button">登出</button></div>
     </header>
     <section class="hero">
       <div><p class="eyebrow">MY DAILY PLAN</p><h1 id="dateHeading">今天</h1><p id="dateSubline" class="subline">把重要的事，一件一件收進今天。</p></div>
@@ -64,6 +71,25 @@
       <div id="entryList" class="list" aria-live="polite"><div class="loader">正在載入行程…</div></div>
     </section>
     <p class="footer-note">你的行程會安全地儲存在 Firebase，並且只有你登入的帳號能讀取。</p>
+    <aside id="assistantPanel" class="assistant-panel hidden" aria-label="AI 行程助理">
+      <div class="assistant-head">
+        <div><div class="assistant-title">✦ 行程小幫手</div><div class="assistant-subtitle">Gemini 3.8 Flash · 只查看你的行程</div></div>
+        <div class="assistant-head-actions"><button id="assistantNewChat" type="button" title="重新開始對話" aria-label="重新開始對話">↻</button><button id="assistantClose" type="button" title="關閉" aria-label="關閉">×</button></div>
+      </div>
+      <div id="assistantMessages" class="assistant-messages" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="assistant-bubble assistant">嗨！我可以查詢你的行程，或依照你的指示新增、修改和刪除。試試問我：「這週有哪些安排？」</div>
+      </div>
+      <div class="assistant-prompts">
+        <button type="button" data-ai-prompt="我今天有哪些行程？">今天的行程</button>
+        <button type="button" data-ai-prompt="我這週有哪些安排？">這週安排</button>
+        <button type="button" data-ai-prompt="幫我新增明天下午 3 點的行程，標題是「整理房間」。">新增行程</button>
+      </div>
+      <form id="assistantForm" class="assistant-composer">
+        <textarea id="assistantInput" rows="1" maxlength="1200" placeholder="問行程，或告訴我想做什麼…" aria-label="輸入訊息" required></textarea>
+        <button id="assistantSend" class="assistant-send" type="submit" aria-label="送出">↑</button>
+      </form>
+      <p class="assistant-privacy">提問與必要的行程內容會傳送給 Google Gemini 回覆；刪除行程前會先向你確認。</p>
+    </aside>
   </main>
 
   <div id="entryOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="formHeading">
