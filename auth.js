@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebas
 import {
   getAuth,
   GoogleAuthProvider,
+  OAuthProvider,
   onAuthStateChanged,
   signInAnonymously,
   signInWithPopup,
@@ -63,7 +64,7 @@ function showView(view) {
 function explainAuthError(error, target = authMessage) {
   const code = error?.code || "";
   if (code === "auth/operation-not-allowed") {
-    setNotice(target, "這種登入方式尚未在 Firebase 啟用。請確認 Google 與匿名登入提供者已開啟。");
+    setNotice(target, "這種登入方式尚未在 Firebase 啟用。請確認 Google、LINE 與匿名登入提供者已開啟。");
   } else if (code === "auth/popup-blocked") {
     setNotice(target, "瀏覽器封鎖了登入視窗。請允許彈出式視窗後再試一次。");
   } else if (code === "auth/unauthorized-domain") {
@@ -154,7 +155,7 @@ function watchSelectedDate() {
 function enterApp(user) {
   currentUser = user;
   showView("app");
-  $("#accountLabel").textContent = user.displayName || user.email || "Google 使用者";
+  $("#accountLabel").textContent = user.displayName || user.email || "已登入帳號";
   updateDateHeader();
   watchSelectedDate();
 }
@@ -193,15 +194,33 @@ async function runGoogleSignIn(target = authMessage) {
   }
 }
 
+async function runLineSignIn(target = authMessage) {
+  clearNotice(target);
+  const provider = new OAuthProvider("oidc.line");
+  provider.addScope("openid");
+  provider.addScope("profile");
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    if (error?.code === "auth/operation-not-allowed" || error?.code === "auth/configuration-not-found") {
+      setNotice(target, "LINE 登入尚未在 Firebase Authentication 設定 OIDC 提供者 oidc.line。");
+      return;
+    }
+    explainAuthError(error, target);
+  }
+}
+
 async function requireGoogleUser() {
   if (!currentUser || currentUser.isAnonymous) {
-    throw new Error("請先使用 Google 帳號登入。");
+    throw new Error("請先使用 Google 或 LINE 帳號登入。");
   }
   return currentUser;
 }
 
 $("#googleSignIn").addEventListener("click", () => runGoogleSignIn());
 $("#visitorGoogleSignIn").addEventListener("click", () => runGoogleSignIn(visitorMessage));
+$("#lineSignIn").addEventListener("click", () => runLineSignIn());
+$("#visitorLineSignIn").addEventListener("click", () => runLineSignIn(visitorMessage));
 $("#guestSignIn").addEventListener("click", async () => {
   clearNotice(authMessage);
   try {
