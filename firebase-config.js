@@ -10,4 +10,4 @@ export const firebaseConfig = {
 
 // Public reCAPTCHA Enterprise site key registered with Firebase App Check.
 export const firebaseAppCheckSiteKey = "6LeLajMuAAAAAEl4L136x1sl7ffLkTsVKIMzFoeE";
-export const firebaseAIModel = "gemini-3.8-flash";
+export const firebaseAIModel = "gemini-3.5-flash-lite";
