@@ -5,7 +5,13 @@ import webbrowser
 
 
 ROOT = Path(__file__).resolve().parent
-ALLOWED_FILES = {"": "index.html", "index.html": "index.html", "auth.js": "auth.js", "firebase-config.js": "firebase-config.js"}
+ALLOWED_FILES = {
+    "": "index.html",
+    "index.html": "index.html",
+    "auth.js": "auth.js",
+    "firebase-config.js": "firebase-config.js",
+    "schedule-assistant.js": "schedule-assistant.js",
+}
 PORT = 65420
 
 
