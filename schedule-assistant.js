@@ -262,16 +262,16 @@ export function mountScheduleAssistant({ app, db, modelName, appCheckReady, getC
     const currentChat = await getChat();
     let changedDate = null;
     let writeCount = 0;
-    const controller = new AbortController();
+    let didTimeout = false;
     let timeoutId;
     const timeout = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
-        controller.abort();
+        didTimeout = true;
         reject(new Error("AI 回覆逾時，請稍後再試。"));
       }, 45000);
     });
     const sendWithTimeout = request => Promise.race([
-      currentChat.sendMessage(request, { signal: controller.signal }),
+      currentChat.sendMessage(request),
       timeout
     ]);
     try {
@@ -303,7 +303,7 @@ export function mountScheduleAssistant({ app, db, modelName, appCheckReady, getC
       }
       return result.response.text ? result.response.text() : "我暫時無法整理出回覆，請換個方式再問一次。";
     } catch (error) {
-      if (controller.signal.aborted) {
+      if (didTimeout) {
         chat = null;
         throw new Error("AI 回覆逾時，請稍後再試。");
       }

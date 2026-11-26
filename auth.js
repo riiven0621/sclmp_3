@@ -21,7 +21,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
 import { firebaseAppCheckSiteKey, firebaseAIModel, firebaseConfig } from "./firebase-config.js?v=20261127-2";
-import { mountScheduleAssistant } from "./schedule-assistant.js";
+import { mountScheduleAssistant } from "./schedule-assistant.js?v=20261127-1";
 
 const $ = selector => document.querySelector(selector);
 const authView = $("#authView");
