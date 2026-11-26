@@ -277,7 +277,7 @@ export function mountScheduleAssistant({ app, db, modelName, appCheckReady, getC
     try {
       let result = await sendWithTimeout(message + "\n\n（若問題涉及日期，以上方系統日期為準。）");
       for (let round = 0; round < 6; round += 1) {
-        const calls = result.response.functionCalls ? result.response.functionCalls() : [];
+        const calls = result.response.functionCalls ? result.response.functionCalls() || [] : [];
         if (!calls.length) break;
         const responses = [];
         for (const call of calls) {
