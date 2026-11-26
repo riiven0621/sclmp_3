@@ -262,8 +262,20 @@ export function mountScheduleAssistant({ app, db, modelName, appCheckReady, getC
     const currentChat = await getChat();
     let changedDate = null;
     let writeCount = 0;
+    const controller = new AbortController();
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(new Error("AI 回覆逾時，請稍後再試。"));
+      }, 45000);
+    });
+    const sendWithTimeout = request => Promise.race([
+      currentChat.sendMessage(request, { signal: controller.signal }),
+      timeout
+    ]);
     try {
-      let result = await currentChat.sendMessage(message + "\n\n（若問題涉及日期，以上方系統日期為準。）");
+      let result = await sendWithTimeout(message + "\n\n（若問題涉及日期，以上方系統日期為準。）");
       for (let round = 0; round < 6; round += 1) {
         const calls = result.response.functionCalls ? result.response.functionCalls() : [];
         if (!calls.length) break;
@@ -287,10 +299,17 @@ export function mountScheduleAssistant({ app, db, modelName, appCheckReady, getC
             functionResponse: { name: call.name, response }
           });
         }
-        result = await currentChat.sendMessage(responses);
+        result = await sendWithTimeout(responses);
       }
       return result.response.text ? result.response.text() : "我暫時無法整理出回覆，請換個方式再問一次。";
+    } catch (error) {
+      if (controller.signal.aborted) {
+        chat = null;
+        throw new Error("AI 回覆逾時，請稍後再試。");
+      }
+      throw error;
     } finally {
+      clearTimeout(timeoutId);
       if (changedDate) onScheduleChanged(changedDate);
     }
   }
